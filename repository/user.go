@@ -15,27 +15,78 @@ type UserDB struct {
 func NewUserDB(db *sqlx.DB) *UserDB {
 	return &UserDB{db: db}
 }
-func (r *UserDB) Create(user testtask.Users) (int, error) {
+func (r *UserDB) Create(user testtask.DBUsers) (int, error) {
 	var id int
-	createuser := fmt.Sprintf("INSERT INTO %s (passport_number, surname,name,patronymic,address) values ($1, $2,$3,$4,$5) RETURNING id", usersTable)
-	row := r.db.QueryRow(createuser, user.Passport_number, user.Surname, user.Name, user.Patronymic, user.Address)
+	createuser := fmt.Sprintf("INSERT INTO %s (passport_serie, passport_number,  surname,name,patronymic,address) values ($1, $2,$3,$4,$5,$6) RETURNING id", usersTable)
+	row := r.db.QueryRow(createuser, user.Passport_serie, user.Passport_number, user.Surname, user.Name, user.Patronymic, user.Address)
 	if err := row.Scan(&id); err != nil {
-		return 0, nil
+		return id, nil
 	}
+
 	return id, nil
 }
 
-func (r *UserDB) GetAll() ([]testtask.Users, error) {
-	var users []testtask.Users
-	query := fmt.Sprintf(`SELECT us.id, us.passport_number,us.surname,us.name,us.patronymic,us.address FROM %s us`,
-		usersTable)
-	err := r.db.Select(&users, query)
-	return users, err
+func (r *UserDB) GetAll(surname, name, patronymic, address string, id, passportSerie, passportNumber, limit, offset int) ([]testtask.DBUsers, error) {
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+	if id != 0 {
+		setValues = append(setValues, fmt.Sprintf("id=$%d", argId))
+		args = append(args, id)
+		argId++
+	}
+	if surname != "" {
+		setValues = append(setValues, fmt.Sprintf("surname=$%d", argId))
+		args = append(args, surname)
+		argId++
+	}
+	if name != "" {
+		setValues = append(setValues, fmt.Sprintf("name=$%d", argId))
+		args = append(args, name)
+		argId++
+	}
+	if patronymic != "" {
+		setValues = append(setValues, fmt.Sprintf("patronymic=$%d", argId))
+		args = append(args, patronymic)
+		argId++
+	}
+	if passportSerie != 0 {
+		setValues = append(setValues, fmt.Sprintf("passport_serie=$%d", argId))
+		args = append(args, passportSerie)
+		argId++
+	}
+	if passportNumber != 0 {
+		setValues = append(setValues, fmt.Sprintf("passport_number=$%d", argId))
+		args = append(args, passportNumber)
+		argId++
+	}
+	if address != "" {
+		setValues = append(setValues, fmt.Sprintf("address=$%d", argId))
+		args = append(args, address)
+		argId++
+	}
+
+	whereClause := ""
+	if len(setValues) > 0 {
+		whereClause = "WHERE " + strings.Join(setValues, " AND ")
+	}
+
+	query := fmt.Sprintf("SELECT id, surname, name,patronymic, passport_serie, passport_number,address FROM users %s LIMIT $%d OFFSET $%d",
+		whereClause, argId, argId+1)
+	args = append(args, limit, offset)
+
+	var users []testtask.DBUsers
+	err := r.db.Select(&users, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
-func (r *UserDB) GetById(id int) (testtask.Users, error) {
-	var user testtask.Users
-	query := fmt.Sprintf(`SELECT us.id, us.passport_number,us.surname,us.name,us.patronymic,us.address FROM %s us WHERE us.id = $1`,
+func (r *UserDB) GetById(id int) (testtask.DBUsers, error) {
+	var user testtask.DBUsers
+	query := fmt.Sprintf(`SELECT us.id,us.passport_serie, us.passport_number,us.surname,us.name,us.patronymic,us.address FROM %s us WHERE us.id = $1`,
 		usersTable)
 	err := r.db.Get(&user, query, id)
 	return user, err
@@ -52,6 +103,12 @@ func (r *UserDB) Update(userId int, input testtask.UpdateUserInput) error {
 	setValues := make([]string, 0)
 	args := make([]interface{}, 0)
 	argId := 1
+
+	if input.Passport_serie != nil {
+		setValues = append(setValues, fmt.Sprintf("passport_serie=$%d", argId))
+		args = append(args, *input.Passport_serie)
+		argId++
+	}
 
 	if input.Passport_number != nil {
 		setValues = append(setValues, fmt.Sprintf("passport_number=$%d", argId))

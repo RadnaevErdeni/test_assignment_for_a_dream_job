@@ -6,19 +6,21 @@ import (
 )
 
 type User interface {
-	Create(user testtask.Users) (int, error)
-	GetAll() ([]testtask.Users, error)
-	GetById(id int) (testtask.Users, error)
+	Create(user testtask.DBUsers) (int, error)
+	GetAll(surname, name, patronymic, address string, id, passportSerie, passportNumber, limit, offset int) ([]testtask.DBUsers, error)
+	GetById(userId int) (testtask.DBUsers, error)
 	Delete(userId int) error
 	Update(userId int, input testtask.UpdateUserInput) error
 }
 
 type Task interface {
-	/*Create(userId, taskId int, item testtask.Task) (int, error)
-	GetAll(userId, taskId int) ([]testtask.Task, error)
-	GetById(userId, taskId int) (testtask.Task, error)
+	Create(userId int, task testtask.Tasks) (int, error)
+	GetAll(userId int) ([]testtask.Tasks, error)
+	GetById(userId, taskId int) (testtask.Tasks, error)
 	Delete(userId, taskId int) error
-	UpdateTasks(userId, taskId int, input testtask.UpdateTaskInput) error*/
+	UpdateTask(userId, taskId int, input testtask.UpdateTaskInput) error
+	Start(userId, taskId int) error
+	End(userId, taskId int) error
 }
 
 type Service struct {
@@ -29,6 +31,6 @@ type Service struct {
 func NewService(repos *repository.Repository) *Service {
 	return &Service{
 		User: NewUserService(repos.User),
-		/*Task: NewTaskService(repos.Task, repos.User),*/
+		Task: NewTaskService(repos.Task, repos.User),
 	}
 }

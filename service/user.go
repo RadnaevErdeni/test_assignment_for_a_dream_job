@@ -13,18 +13,11 @@ func NewUserService(repo repository.User) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) Create(user testtask.Users) (int, error) {
-	if err := user.ValidatePasNum(); err != nil {
-		return 0, err
-	}
+func (s *UserService) Create(user testtask.DBUsers) (int, error) {
 	return s.repo.Create(user)
 }
 
-func (s *UserService) GetAll() ([]testtask.Users, error) {
-	return s.repo.GetAll()
-}
-
-func (s *UserService) GetById(id int) (testtask.Users, error) {
+func (s *UserService) GetById(id int) (testtask.DBUsers, error) {
 	return s.repo.GetById(id)
 }
 
@@ -32,5 +25,12 @@ func (s *UserService) Delete(userId int) error {
 	return s.repo.Delete(userId)
 }
 func (s *UserService) Update(userId int, input testtask.UpdateUserInput) error {
+	if err := input.Validate(); err != nil {
+		return err
+	}
 	return s.repo.Update(userId, input)
+}
+
+func (s *UserService) GetAll(surname, name, patronymic, address string, id, passportSerie, passportNumber, limit, offset int) ([]testtask.DBUsers, error) {
+	return s.repo.GetAll(surname, name, patronymic, address, id, passportSerie, passportNumber, limit, offset)
 }
