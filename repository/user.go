@@ -146,3 +146,45 @@ func (r *UserDB) Update(userId int, input testtask.UpdateUserInput) error {
 	_, err := r.db.Exec(query, args...)
 	return err
 }
+
+func (r *UserDB) LaborCosts(userId int, start, end string) ([]testtask.LaborCosts, error) {
+	var lc []testtask.LaborCosts
+	query := fmt.Sprintf(`SELECT surname,name,patronymic,title,TO_CHAR(justify_hours(duration), 'HH24:MI') as duration FROM %s ut INNER JOIN %s us ON us.id = ut.user_id INNER JOIN %s  ts ON ts.id = ut.task_id WHERE us.id = $1 AND start_time >= $2 AND end_time <= $3 ORDER BY duration DESC`,
+		usersTaskTable, usersTable, taskTable)
+	if err := r.db.Select(&lc, query, userId, start, end); err != nil {
+		fmt.Println(err)
+		fmt.Println(start)
+		return nil, err
+	}
+	return lc, nil
+}
+
+/*
+func (r *UserDB) LaborCosts(userId int, start, end string) ([]testtask.LaborCosts, error) {
+	var lc []testtask.LaborCosts
+	query := `
+		SELECT surname, name, patronymic, title, TO_CHAR(justify_hours(duration), 'HH24:MI') as duration
+		FROM users_tasks ut
+		INNER JOIN users us ON us.id = ut.user_id
+		INNER JOIN tasks ts ON ts.id = ut.task_id
+		WHERE us.id = $1 AND start_time >= $2 AND end_time <= $3
+		ORDER BY duration DESC`
+
+	// Преобразуем строки в тип time.Time
+	startTime, err := time.Parse(time.RFC3339, start)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start time format: %v", err)
+	}
+	endTime, err := time.Parse(time.RFC3339, end)
+	if err != nil {
+		return nil, fmt.Errorf("invalid end time format: %v", err)
+	}
+
+	// Выполнение запроса с параметрами
+	if err := r.db.Select(&lc, query, userId, startTime, endTime); err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return lc, nil
+}
+*/

@@ -85,14 +85,14 @@ func (h *Handler) getUserById(c *gin.Context) {
 func (h *Handler) updateUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("userId"))
 	if err != nil {
-		errResponse(c, http.StatusBadRequest, "invalid id param")
+		errResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	var input testtask.UpdateUserInput
 
 	if err := c.BindJSON(&input); err != nil {
-		errResponse(c, http.StatusBadRequest, err.Error())
+		errResponse(c, http.StatusBadRequest, "invalid user id param")
 		return
 	}
 	if err := h.services.Update(id, input); err != nil {
@@ -100,7 +100,7 @@ func (h *Handler) updateUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, responsestat{
-		Stat: "Successful",
+		Stat: "200:Ok",
 	})
 }
 func (h *Handler) deleteUser(c *gin.Context) {
@@ -115,6 +115,21 @@ func (h *Handler) deleteUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, responsestat{
-		Stat: "Successful",
+		Stat: "200:Ok",
 	})
+}
+func (h *Handler) laborCosts(c *gin.Context) {
+	start := c.Query("start")
+	end := c.Query("end")
+	userId, err := strconv.Atoi(c.Param("userId"))
+	if err != nil {
+		errResponse(c, http.StatusBadRequest, "invalid user id param")
+		return
+	}
+	lc, err := h.services.User.LaborCosts(userId, start, end)
+	if err != nil {
+		errResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, lc)
 }

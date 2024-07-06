@@ -20,8 +20,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	user := router.Group("/user")
 	{
 		user.POST("/", h.createUser)
-		user.GET("/", h.getAllUsers)
+		user.GET("", h.getAllUsers)
 		user.GET("/:userId", h.getUserById)
+		user.GET("/:userId/", h.laborCosts)
 		user.PUT("/:userId", h.updateUser)
 		user.DELETE("/:userId", h.deleteUser)
 
@@ -34,7 +35,6 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			tasks.PUT("/:taskId/start", h.startTask)
 			tasks.PUT("/:taskId/end", h.endTask)
 			tasks.DELETE("/:taskId", h.deleteTask)
-			//еще одна апишка для пункта 1.2
 		}
 	}
 

@@ -12,6 +12,7 @@ type User interface {
 	GetById(userId int) (testtask.DBUsers, error)
 	Delete(userId int) error
 	Update(userId int, input testtask.UpdateUserInput) error
+	LaborCosts(userId int, start, end string) ([]testtask.LaborCosts, error)
 }
 
 type Task interface {

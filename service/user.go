@@ -34,3 +34,6 @@ func (s *UserService) Update(userId int, input testtask.UpdateUserInput) error {
 func (s *UserService) GetAll(surname, name, patronymic, address string, id, passportSerie, passportNumber, limit, offset int) ([]testtask.DBUsers, error) {
 	return s.repo.GetAll(surname, name, patronymic, address, id, passportSerie, passportNumber, limit, offset)
 }
+func (s *UserService) LaborCosts(userId int, start, end string) ([]testtask.LaborCosts, error) {
+	return s.repo.LaborCosts(userId, start, end)
+}

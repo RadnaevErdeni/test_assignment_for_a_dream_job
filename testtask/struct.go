@@ -24,7 +24,18 @@ type Users struct {
 	Patronymic      string `json:"patronymic" `
 	Address         string `json:"address" binding:"required"`
 }
+type Times struct {
+	Start_time *string `json:"start_time"`
+	End_time   *string `json:"end_time"`
+}
 
+type LaborCosts struct {
+	Surname    string `json:"surname"`
+	Name       string `json:"name"`
+	Patronymic string `json:"patronymic" `
+	Title      string `json:"title"`
+	Duration   string `json:"duration"`
+}
 type Tasks struct {
 	Id          int    `json:"id" db:"id"`
 	Title       string `json:"title" db:"title" binding:"required"`
