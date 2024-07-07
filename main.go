@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -11,6 +12,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	"tt/repository"
 	"tt/service"
@@ -29,6 +32,11 @@ func main() {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 	dbSSLMode := os.Getenv("DB_SSL_MODE")
+
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", dbHost, dbPort, dbUsername, dbPassword)
+	DB, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	createDatabaseCommand := fmt.Sprintf("CREATE DATABASE %s", dbName)
+	DB.Exec(createDatabaseCommand)
 
 	db, err := repository.DBC(repository.Conf{
 		Host:     dbHost,
