@@ -6,4 +6,4 @@ CREATE TABLE users (
     address VARCHAR(100),
     passport_serie INT NOT NULL ,
     passport_number INT NOT NULL
-)
+);

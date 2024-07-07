@@ -41,7 +41,7 @@ func main() {
 		log.Fatalf("Failed to initialize the database: %v", err)
 	}
 
-	dbURL := "postgresql://" + dbUsername + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName + "?sslmode=" + dbSSLMode
+	dbURL := "postgres://" + dbUsername + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName + "?sslmode=" + dbSSLMode
 	cmd := exec.Command("migrate", "-path", "db/migrations", "-database", dbURL, "up")
 	err = cmd.Run()
 	if err != nil {
