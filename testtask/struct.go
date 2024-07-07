@@ -37,15 +37,15 @@ type LaborCosts struct {
 	Duration   string `json:"duration"`
 }
 type Tasks struct {
-	Id          int    `json:"id" db:"id"`
-	Title       string `json:"title" db:"title" binding:"required"`
-	Description string `json:"description" db:"description"`
-	Start_time  string `json:"start_time" db:"start_time"`
-	End_time    string `json:"end_time" db:"end_time"`
-	Duration    string `json:"duration" db:"duration"`
-	Done        bool   `json:"done" db:"done"`
-	Took        bool   `json:"took" db:"took"`
-	Date_create string `json:"date_create" db:"date_create"`
+	Id          int     `json:"id" db:"id"`
+	Title       string  `json:"title" db:"title" binding:"required"`
+	Description string  `json:"description" db:"description"`
+	Start_time  *string `json:"start_time" db:"start_time"`
+	End_time    *string `json:"end_time" db:"end_time"`
+	Duration    string  `json:"duration" db:"duration"`
+	Done        bool    `json:"done" db:"done"`
+	Took        bool    `json:"took" db:"took"`
+	Date_create string  `json:"date_create" db:"date_create"`
 }
 
 type UserTask struct {
