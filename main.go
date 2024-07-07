@@ -35,7 +35,7 @@ func main() {
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", dbHost, dbPort, dbUsername, dbPassword)
 	DB, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	createDatabaseCommand := fmt.Sprintf("CREATE DATABASE IF NOT EXIST %s", dbName)
+	createDatabaseCommand := fmt.Sprintf("CREATE DATABASE %s", dbName)
 	DB.Exec(createDatabaseCommand)
 
 	db, err := repository.DBC(repository.Conf{

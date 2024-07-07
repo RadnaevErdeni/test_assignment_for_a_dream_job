@@ -23,7 +23,7 @@ func (r *TaskDB) Create(userId int, task testtask.Tasks) (int, error) {
 	}
 
 	var id int
-	createTaskQuery := fmt.Sprintf("INSERT INTO %s (title, description,done,took,date_create,duration) values ($1, $2, false,false,Now(),'00:00:00') RETURNING id", taskTable)
+	createTaskQuery := fmt.Sprintf("INSERT INTO %s (title, description,done,took,date_create) values ($1, $2, false,false,Now()) RETURNING id", taskTable)
 	row := tx.QueryRow(createTaskQuery, task.Title, task.Description)
 	err = row.Scan(&id)
 	if err != nil {
@@ -137,7 +137,7 @@ func (r *TaskDB) Start(userId, taskId int) error {
 	return nil
 }
 func (r *TaskDB) End(userId, taskId int) error {
-	endQuery := fmt.Sprintf("UPDATE %s ts SET end_time = Now(),done = true ,duration = Now() - ts.start_time FROM %s tsk, %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, taskTable, usersTaskTable)
+	endQuery := fmt.Sprintf("UPDATE %s ts SET end_time = Now(),done = true FROM %s tsk, %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, taskTable, usersTaskTable)
 	_, err := r.db.Exec(endQuery, taskId, userId)
 	if err != nil {
 		return err

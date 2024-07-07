@@ -30,11 +30,11 @@ type Times struct {
 }
 
 type LaborCosts struct {
-	Surname    string `json:"surname"`
-	Name       string `json:"name"`
-	Patronymic string `json:"patronymic" `
-	Title      string `json:"title"`
-	Duration   string `json:"duration"`
+	Surname    string  `json:"surname"`
+	Name       string  `json:"name"`
+	Patronymic string  `json:"patronymic" `
+	Title      string  `json:"title"`
+	Duration   *string `json:"duration"`
 }
 type Tasks struct {
 	Id          int     `json:"id" db:"id"`
@@ -42,7 +42,7 @@ type Tasks struct {
 	Description string  `json:"description" db:"description"`
 	Start_time  *string `json:"start_time" db:"start_time"`
 	End_time    *string `json:"end_time" db:"end_time"`
-	Duration    string  `json:"duration" db:"duration"`
+	Duration    *string `json:"duration" db:"duration"`
 	Done        bool    `json:"done" db:"done"`
 	Took        bool    `json:"took" db:"took"`
 	Date_create string  `json:"date_create" db:"date_create"`

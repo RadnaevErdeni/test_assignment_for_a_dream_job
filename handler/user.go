@@ -189,8 +189,13 @@ func (h *Handler) deleteUser(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /user/{userId}/labor-costs [get]
 func (h *Handler) laborCosts(c *gin.Context) {
-	start := c.Query("start")
-	end := c.Query("end")
+	var start *string
+	var end *string
+	startStr := c.Query("start")
+	endStr := c.Query("end")
+
+	start = &startStr
+	end = &endStr
 	userId, err := strconv.Atoi(c.Param("userId"))
 	if err != nil {
 		errResponse(c, http.StatusBadRequest, "invalid user id param")
