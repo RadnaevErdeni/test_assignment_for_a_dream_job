@@ -8,6 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary Create User
+// @Description Create a new user
+// @ID create-user
+// @Accept json
+// @Produce json
+// @Param user body testtask.Users true "User info"
+// @Success 200 {object} map[string]int "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user [post]
 func (h *Handler) createUser(c *gin.Context) {
 	var input testtask.Users
 	if err := c.BindJSON(&input); err != nil {
@@ -28,6 +38,24 @@ func (h *Handler) createUser(c *gin.Context) {
 		"id": id})
 }
 
+// @Summary Get All Users
+// @Description Get all users
+// @ID get-all-users
+// @Accept json
+// @Produce json
+// @Param id query int false "User ID"
+// @Param surname query string false "Surname"
+// @Param name query string false "Name"
+// @Param patronymic query string false "Patronymic"
+// @Param passportSerie query int false "Passport Serie"
+// @Param passportNumber query int false "Passport Number"
+// @Param address query string false "Address"
+// @Param limit query int false "Limit" default(10)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {array} service.User
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user [get]
 func (h *Handler) getAllUsers(c *gin.Context) {
 	idstr := c.Query("id")
 	surname := c.Query("surname")
@@ -68,6 +96,15 @@ func (h *Handler) getAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
+// @Summary Get User by ID
+// @Description Get user by ID
+// @ID get-user-by-id
+// @Produce json
+// @Param userId path int true "User ID"
+// @Success 200 {object} testtask.DBUsers "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId} [get]
 func (h *Handler) getUserById(c *gin.Context) {
 	var user testtask.DBUsers
 	id, err := strconv.Atoi(c.Param("userId"))
@@ -82,6 +119,18 @@ func (h *Handler) getUserById(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, user)
 }
+
+// @Summary Update User
+// @Description Update user by ID
+// @ID update-user
+// @Accept json
+// @Produce json
+// @Param userId path int true "User ID"
+// @Param user body testtask.UpdateUserInput true "User info"
+// @Success 200 {object} map[string]string "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId} [put]
 func (h *Handler) updateUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("userId"))
 	if err != nil {
@@ -103,6 +152,15 @@ func (h *Handler) updateUser(c *gin.Context) {
 		Stat: "200:Ok",
 	})
 }
+
+// @Summary Delete User
+// @Description Delete user by ID
+// @ID delete-user
+// @Param userId path int true "User ID"
+// @Success 200 {object} map[string]string "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId} [delete]
 func (h *Handler) deleteUser(c *gin.Context) {
 	userId, err := strconv.Atoi(c.Param("userId"))
 	if err != nil {
@@ -118,6 +176,18 @@ func (h *Handler) deleteUser(c *gin.Context) {
 		Stat: "200:Ok",
 	})
 }
+
+// @Summary Get Labor Costs
+// @Description Get labor costs for a user
+// @ID get-labor-costs
+// @Produce json
+// @Param userId path int true "User ID"
+// @Param start query string true "Start date"
+// @Param end query string true "End date"
+// @Success 200 {object} map[string]string "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId}/labor-costs [get]
 func (h *Handler) laborCosts(c *gin.Context) {
 	start := c.Query("start")
 	end := c.Query("end")

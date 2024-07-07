@@ -1,9 +1,12 @@
 package handler
 
 import (
+	_ "tt/docs"
 	"tt/service"
 
 	"github.com/gin-gonic/gin"
+	swagFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Handler struct {
@@ -22,10 +25,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		user.POST("/", h.createUser)
 		user.GET("", h.getAllUsers)
 		user.GET("/:userId", h.getUserById)
-		user.GET("/:userId/", h.laborCosts)
+		user.GET("/:userId/labor-costs", h.laborCosts)
 		user.PUT("/:userId", h.updateUser)
 		user.DELETE("/:userId", h.deleteUser)
-
 		tasks := user.Group(":userId/tasks")
 		{
 			tasks.POST("/", h.createTask)
@@ -37,6 +39,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			tasks.DELETE("/:taskId", h.deleteTask)
 		}
 	}
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swagFiles.Handler))
 
 	return router
 }

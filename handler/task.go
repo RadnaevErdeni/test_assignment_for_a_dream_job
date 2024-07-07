@@ -8,6 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary Create Task
+// @Description Create a new task for a user
+// @ID create-task
+// @Accept json
+// @Produce json
+// @Param userId path int true "User ID"
+// @Param task body testtask.Tasks true "Task info"
+// @Success 200 {object} map[string]int "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId}/tasks [post]
 func (h *Handler) createTask(c *gin.Context) {
 	var input testtask.Tasks
 	userId, err := strconv.Atoi(c.Param("userId"))
@@ -29,6 +40,15 @@ func (h *Handler) createTask(c *gin.Context) {
 		"id": id})
 }
 
+// @Summary Get All Tasks
+// @Description Get all tasks for a user
+// @ID get-all-tasks
+// @Produce json
+// @Param userId path int true "User ID"
+// @Success 200 {array} testtask.Tasks "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId}/tasks [get]
 func (h *Handler) getAllTask(c *gin.Context) {
 	userId, err := strconv.Atoi(c.Param("userId"))
 	if err != nil {
@@ -44,6 +64,16 @@ func (h *Handler) getAllTask(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
+// @Summary Get Task by ID
+// @Description Get task by ID
+// @ID get-task-by-id
+// @Produce json
+// @Param userId path int true "User ID"
+// @Param taskId path int true "Task ID"
+// @Success 200 {object} testtask.Tasks "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId}/tasks/{taskId} [get]
 func (h *Handler) getTaskById(c *gin.Context) {
 	userId, err := strconv.Atoi(c.Param("userId"))
 	if err != nil {
@@ -62,6 +92,19 @@ func (h *Handler) getTaskById(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, task)
 }
+
+// @Summary Update Task
+// @Description Update task by ID
+// @ID update-task
+// @Accept json
+// @Produce json
+// @Param userId path int true "User ID"
+// @Param taskId path int true "Task ID"
+// @Param task body testtask.UpdateTaskInput true "Task info"
+// @Success 200 {object} map[string]string "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId}/tasks/{taskId} [put]
 func (h *Handler) updateTask(c *gin.Context) {
 	userId, err := strconv.Atoi(c.Param("userId"))
 	if err != nil {
@@ -88,6 +131,16 @@ func (h *Handler) updateTask(c *gin.Context) {
 		Stat: "Succesful",
 	})
 }
+
+// @Summary Delete Task
+// @Description Delete task by ID
+// @ID delete-task
+// @Param userId path int true "User ID"
+// @Param taskId path int true "Task ID"
+// @Success 200 {object} map[string]string "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId}/tasks/{taskId} [delete]
 func (h *Handler) deleteTask(c *gin.Context) {
 	userId, err := strconv.Atoi(c.Param("userId"))
 	if err != nil {
@@ -108,6 +161,17 @@ func (h *Handler) deleteTask(c *gin.Context) {
 		Stat: "Succesful",
 	})
 }
+
+// @Summary Start Task
+// @Description Start task by ID
+// @ID start-task
+// @Produce json
+// @Param userId path int true "User ID"
+// @Param taskId path int true "Task ID"
+// @Success 200 {object} map[string]string "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId}/tasks/{taskId}/start [put]
 func (h *Handler) startTask(c *gin.Context) {
 	userId, err := strconv.Atoi(c.Param("userId"))
 	if err != nil {
@@ -128,6 +192,17 @@ func (h *Handler) startTask(c *gin.Context) {
 		Stat: "Succesful",
 	})
 }
+
+// @Summary End Task
+// @Description End task by ID
+// @ID end-task
+// @Produce json
+// @Param userId path int true "User ID"
+// @Param taskId path int true "Task ID"
+// @Success 200 {object} map[string]string "Ok"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /user/{userId}/tasks/{taskId}/end [put]
 func (h *Handler) endTask(c *gin.Context) {
 	userId, err := strconv.Atoi(c.Param("userId"))
 	if err != nil {

@@ -3,7 +3,7 @@ CREATE TABLE task (
     title VARCHAR(100) NOT NULL,
     description VARCHAR(100),
     start_time TIMESTAMP ,
-    duration VARCHAR(100),
+    duration INTERVAL,
     done BOOLEAN NOT NULL ,
     took BOOLEAN NOT NULL ,
     end_time TIMESTAMP ,

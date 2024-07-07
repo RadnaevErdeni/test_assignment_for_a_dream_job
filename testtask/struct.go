@@ -67,14 +67,6 @@ type UpdateTaskInput struct {
 	Took        *bool   `json:"took"`
 }
 
-/*
-	func (i *UpdateUserInput) ValidatePasNumUp(usr UpdateUserInput) error {
-		if len(*usr.Passport_number) != 6 && len(*usr.Passport_serie) != 4 {
-			return errors.New("invalid passport number")
-		}
-		return nil
-	}
-*/
 func (i *Users) ValidatePasNum(usr Users) (DBUsers, error) {
 	var user DBUsers
 	if len(usr.Passport_number) != 11 {

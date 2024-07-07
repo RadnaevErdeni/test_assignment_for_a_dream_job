@@ -4,13 +4,14 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	_ "tt/docs"
+	"tt/handler"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
-	"tt/handler"
 	"tt/repository"
 	"tt/service"
 	"tt/testtask"
