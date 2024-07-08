@@ -1,1 +1,1 @@
-DROP TABLE user_task;
+DROP TABLE IF EXISTS user_task;

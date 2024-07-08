@@ -1,4 +1,4 @@
-CREATE TABLE task (
+CREATE TABLE IF NOT EXISTS task (
     id SERIAL PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
     description VARCHAR(100),
