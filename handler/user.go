@@ -1,8 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
+	"time"
 	"tt/testtask"
 
 	"github.com/gin-gonic/gin"
@@ -19,16 +23,25 @@ import (
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /user [post]
 func (h *Handler) createUser(c *gin.Context) {
-	var input testtask.Users
+	var input testtask.Passport
 	if err := c.BindJSON(&input); err != nil {
 		errResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	user, err := input.ValidatePasNum(input)
+	serie, number, err := input.ValidatePasNum(input)
 	if err != nil {
 		errResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	user, err := pasAPI(serie, number)
+	if err != nil {
+		errResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	user.Passport_serie = serie
+	user.Passport_number = number
 	id, err := h.services.User.Create(user)
 	if err != nil {
 		errResponse(c, http.StatusInternalServerError, err.Error())
@@ -207,4 +220,31 @@ func (h *Handler) laborCosts(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, lc)
+}
+
+func pasAPI(serie, number int) (testtask.DBUsers, error) {
+	var user testtask.DBUsers
+	url := fmt.Sprintf("http://localhost:8080/users?passportSerie=%d&passportNumber=%d", serie, number)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		return user, fmt.Errorf("failed to make request to external API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return user, fmt.Errorf("external API returned non-200 status: %d", resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return user, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	err = json.Unmarshal(body, &user)
+	if err != nil {
+		return user, fmt.Errorf("failed to unmarshal response body: %w", err)
+	}
+
+	return user, nil
 }

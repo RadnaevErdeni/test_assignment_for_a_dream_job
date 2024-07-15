@@ -1,30 +1,38 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"os"
-	"os/exec"
+	"tt/db/migrations"
 	_ "tt/docs"
 	"tt/handler"
 
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"github.com/sirupsen/logrus"
 
 	"tt/repository"
 	"tt/service"
 	"tt/testtask"
 )
 
+func init() {
+	testtask.Init()
+}
+
 func main() {
-	err := godotenv.Load("connect.env")
+	logrus.Info("Starting application")
+
+	err := migrations.StartDBmain()
 	if err != nil {
-		log.Fatalf("Failed to load .env file: %v", err)
+		logrus.Fatalf("Error initializing database 1: %v", err)
 	}
+	logrus.Info("Successfully initialized database 1")
+
+	err = godotenv.Load("connect.env")
+	if err != nil {
+		logrus.Fatalf("Failed to load .env file: %v", err)
+	}
+	logrus.Info("Loaded .env file successfully")
 
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
@@ -32,11 +40,16 @@ func main() {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 	dbSSLMode := os.Getenv("DB_SSL_MODE")
+	cnPort := os.Getenv("CON_PORT")
+	cnHost := os.Getenv("CON_HOST")
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s sslmode=disable", dbHost, dbPort, dbUsername, dbPassword)
-	DB, _ := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	createDatabaseCommand := fmt.Sprintf("CREATE DATABASE %s", dbName)
-	DB.Exec(createDatabaseCommand)
+	logrus.WithFields(logrus.Fields{
+		"dbHost": dbHost,
+		"dbPort": dbPort,
+		"dbName": dbName,
+		"cnHost": cnHost,
+		"cnPort": cnPort,
+	}).Debug("Loaded environment variables")
 
 	db, err := repository.DBC(repository.Conf{
 		Host:     dbHost,
@@ -47,22 +60,18 @@ func main() {
 		SSLMode:  dbSSLMode,
 	})
 	if err != nil {
-		log.Fatalf("Failed to initialize the database: %v", err)
+		logrus.Fatalf("Failed to initialize the database: %v", err)
 	}
-
-	dbURL := "postgres://" + dbUsername + ":" + dbPassword + "@" + dbHost + ":" + dbPort + "/" + dbName + "?sslmode=" + dbSSLMode
-	cmd := exec.Command("migrate", "-path", "db/migrations", "-database", dbURL, "up")
-	err = cmd.Run()
-	if err != nil {
-		log.Fatalf("Error during migration: %v", err)
-	}
+	logrus.Info("Successfully initialized the database")
 
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
 	handlers := handler.NewHandler(services)
 
 	srv := new(testtask.Server)
-	if err := srv.Run("localhost", "8080", handlers.InitRoutes()); err != nil {
-		log.Fatalf("Launch error HTTP server: %v", err)
+	if err := srv.Run(cnHost, cnPort, handlers.InitRoutes()); err != nil {
+		logrus.Fatalf("Launch error HTTP server: %v", err)
 	}
+
+	logrus.Info("Application started successfully")
 }

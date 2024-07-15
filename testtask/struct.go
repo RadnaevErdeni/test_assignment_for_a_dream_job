@@ -12,40 +12,40 @@ type DBUsers struct {
 	Passport_number int    `json:"passport_number" db:"passport_number" binding:"required"`
 	Surname         string `json:"surname" db:"surname"`
 	Name            string `json:"name" db:"name" binding:"required"`
-	Patronymic      string `json:"patronymic" db:"patronymic"`
+	Patronymic      string `json:"patronymic,omitempty" db:"patronymic"`
 	Address         string `json:"address" db:"address" binding:"required"`
 }
-
-type Users struct {
-	Id              int    `json:"id"`
-	Passport_number string `json:"passport_number" binding:"required"`
-	Surname         string `json:"surname" binding:"required"`
-	Name            string `json:"name" binding:"required"`
-	Patronymic      string `json:"patronymic" `
-	Address         string `json:"address" binding:"required"`
+type Passport struct {
+	PassportNumber string `json:"passport_number"`
 }
+
 type Times struct {
 	Start_time *string `json:"start_time"`
 	End_time   *string `json:"end_time"`
 }
 
 type LaborCosts struct {
-	Surname    string  `json:"surname"`
-	Name       string  `json:"name"`
-	Patronymic string  `json:"patronymic" `
-	Title      string  `json:"title"`
-	Duration   *string `json:"duration"`
+	Surname     string  `json:"surname"`
+	Name        string  `json:"name"`
+	Patronymic  string  `json:"patronymic" `
+	Title       string  `json:"title"`
+	Duration    *string `json:"duration,omitempty"`
+	Count_pause *int    `json:"count_pause,omitempty"`
 }
 type Tasks struct {
-	Id          int     `json:"id" db:"id"`
-	Title       string  `json:"title" db:"title" binding:"required"`
-	Description string  `json:"description" db:"description"`
-	Start_time  *string `json:"start_time" db:"start_time"`
-	End_time    *string `json:"end_time" db:"end_time"`
-	Duration    *string `json:"duration" db:"duration"`
-	Done        bool    `json:"done" db:"done"`
-	Took        bool    `json:"took" db:"took"`
-	Date_create string  `json:"date_create" db:"date_create"`
+	Id             int     `json:"id" db:"id"`
+	Title          string  `json:"title,omitempty" db:"title" binding:"required"`
+	Description    string  `json:"description,omitempty" db:"description"`
+	Start_time     *string `json:"start_time,omitempty" db:"start_time"`
+	End_time       *string `json:"end_time,omitempty" db:"end_time"`
+	Duration       *string `json:"duration,omitempty" db:"duration"`
+	Duration_pause *string `json:"duration_pause,omitempty" db:"duration_pause"`
+	Done           bool    `json:"done,omitempty" db:"done"`
+	Took           bool    `json:"took,omitempty" db:"took"`
+	Date_create    string  `json:"date_create" db:"date_create"`
+	Pause_time     *string `json:"pause_time,omitempty" db:"pause_time"`
+	Resume_time    *string `json:"resume_time,omitempty" db:"resume_time"`
+	Count_pause    int     `json:"count_pause" db:"count_pause"`
 }
 
 type UserTask struct {
@@ -67,33 +67,27 @@ type UpdateTaskInput struct {
 	Took        *bool   `json:"took"`
 }
 
-func (i *Users) ValidatePasNum(usr Users) (DBUsers, error) {
-	var user DBUsers
-	if len(usr.Passport_number) != 11 {
-		return user, errors.New("invalid passport number")
+func (i *Passport) ValidatePasNum(usr Passport) (int, int, error) {
+	if len(usr.PassportNumber) != 11 {
+		return 0, 0, errors.New("invalid passport number")
 	}
-	sn := strings.Split(usr.Passport_number, " ")
+	sn := strings.Split(usr.PassportNumber, " ")
 	if len(sn) != 2 {
-		return user, errors.New("invalid passport number")
+		return 0, 0, errors.New("invalid passport number")
 	}
 	if len(sn[0]) != 4 && len(sn[1]) != 6 {
-		return user, errors.New("invalid passport number")
+		return 0, 0, errors.New("invalid passport number")
 	}
-	pn, err := strconv.Atoi(sn[0])
+	pn, err := strconv.Atoi(sn[1])
 	if err != nil {
-		return user, err
+		return 0, 0, err
 	}
-	ps, err := strconv.Atoi(sn[1])
+	ps, err := strconv.Atoi(sn[0])
 	if err != nil {
-		return user, err
+		return 0, 0, err
 	}
-	user.Surname = usr.Surname
-	user.Name = usr.Name
-	user.Patronymic = usr.Patronymic
-	user.Address = usr.Address
-	user.Passport_number = ps
-	user.Passport_serie = pn
-	return user, nil
+
+	return ps, pn, nil
 }
 
 func (i UpdateTaskInput) Validate() error {

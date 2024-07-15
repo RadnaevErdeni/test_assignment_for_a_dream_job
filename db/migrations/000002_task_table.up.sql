@@ -3,9 +3,13 @@ CREATE TABLE IF NOT EXISTS task (
     title VARCHAR(100) NOT NULL,
     description VARCHAR(100),
     start_time TIMESTAMP ,
-    duration INTERVAL GENERATED ALWAYS AS (end_time - start_time) STORED,
+	duration_pause INTERVAL ,
+    duration INTERVAL ,
+    pause_time TIMESTAMP,
+    resume_time TIMESTAMP,
     done BOOLEAN NOT NULL ,
     took BOOLEAN NOT NULL ,
     end_time TIMESTAMP ,
-    date_create TIMESTAMP 
+    date_create TIMESTAMP,
+    count_pause INTEGER DEFAULT 0
 )

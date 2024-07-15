@@ -22,6 +22,8 @@ type Task interface {
 	UpdateTask(userId, taskId int, input testtask.UpdateTaskInput) error
 	Start(userId, taskId int) error
 	End(userId, taskId int) error
+	Pause(userId, taskId int) error
+	Resume(userId, taskId int) error
 }
 
 type Service struct {

@@ -128,7 +128,7 @@ func (r *TaskDB) UpdateTask(userId, taskId int, input testtask.UpdateTaskInput) 
 }
 
 func (r *TaskDB) Start(userId, taskId int) error {
-	startQuery := fmt.Sprintf("UPDATE %s ts SET start_time = Now(),took = true FROM %s tsk,%s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, taskTable, usersTaskTable)
+	startQuery := fmt.Sprintf("UPDATE %s ts SET start_time = Now(),resume_time = Now(),took = true FROM %s tsk,%s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, taskTable, usersTaskTable)
 	_, err := r.db.Exec(startQuery, taskId, userId)
 	if err != nil {
 		return err
@@ -137,11 +137,69 @@ func (r *TaskDB) Start(userId, taskId int) error {
 	return nil
 }
 func (r *TaskDB) End(userId, taskId int) error {
-	endQuery := fmt.Sprintf("UPDATE %s ts SET end_time = Now(),done = true FROM %s tsk, %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, taskTable, usersTaskTable)
-	_, err := r.db.Exec(endQuery, taskId, userId)
+	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
+	endQuery := fmt.Sprintf("UPDATE %s ts SET end_time = Now(),done = true,pause_time = CASE WHEN count_pause > 0 THEN Now() END, resume_time = CASE WHEN count_pause = 0 THEN NULL::timestamp ELSE Now() END FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, usersTaskTable)
+	_, err = tx.Exec(endQuery, taskId, userId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
 
-	return nil
+	EndQuery := fmt.Sprintf("UPDATE %s ts SET duration = CASE WHEN count_pause = 0 THEN end_time - start_time ELSE duration + (pause_time - resume_time) END FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, usersTaskTable)
+	_, err = tx.Exec(EndQuery, taskId, userId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (r *TaskDB) Pause(userId, taskId int) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	PauseQuery := fmt.Sprintf("UPDATE %s ts SET pause_time = Now(),count_pause = count_pause+1 FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, usersTaskTable)
+	_, err = tx.Exec(PauseQuery, taskId, userId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	pauseQuery := fmt.Sprintf("UPDATE %s ts SET duration_pause = pause_time - resume_time, resume_time = null FROM  %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, usersTaskTable)
+	_, err = tx.Exec(pauseQuery, taskId, userId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+
+}
+
+func (r *TaskDB) Resume(userId, taskId int) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	ResumeQuery := fmt.Sprintf("UPDATE %s ts SET resume_time = Now(), duration = '00:00' FROM %s tsk, %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, taskTable, usersTaskTable)
+	_, err = tx.Exec(ResumeQuery, taskId, userId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	resumeQuery := fmt.Sprintf("UPDATE %s ts SET pause_time = null,duration = ts.duration + ts.duration_pause FROM %s tsk, %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, taskTable, usersTaskTable)
+	_, err = tx.Exec(resumeQuery, taskId, userId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+
 }

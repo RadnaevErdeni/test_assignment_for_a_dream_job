@@ -223,3 +223,45 @@ func (h *Handler) endTask(c *gin.Context) {
 		Stat: "Succesful",
 	})
 }
+
+func (h *Handler) pauseTask(c *gin.Context) {
+	userId, err := strconv.Atoi(c.Param("userId"))
+	if err != nil {
+		errResponse(c, http.StatusBadRequest, "invalid user id param")
+		return
+	}
+	taskId, err := strconv.Atoi(c.Param("taskId"))
+	if err != nil {
+		errResponse(c, http.StatusBadRequest, "invalid task id param")
+		return
+	}
+	err = h.services.Task.Pause(userId, taskId)
+	if err != nil {
+		errResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, responsestat{
+		Stat: "Succesful",
+	})
+}
+
+func (h *Handler) resumeTask(c *gin.Context) {
+	userId, err := strconv.Atoi(c.Param("userId"))
+	if err != nil {
+		errResponse(c, http.StatusBadRequest, "invalid user id param")
+		return
+	}
+	taskId, err := strconv.Atoi(c.Param("taskId"))
+	if err != nil {
+		errResponse(c, http.StatusBadRequest, "invalid task id param")
+		return
+	}
+	err = h.services.Task.Resume(userId, taskId)
+	if err != nil {
+		errResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, responsestat{
+		Stat: "Succesful",
+	})
+}

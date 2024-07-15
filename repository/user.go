@@ -146,6 +146,7 @@ func (r *UserDB) Update(userId int, input testtask.UpdateUserInput) error {
 	_, err := r.db.Exec(query, args...)
 	return err
 }
+
 func (r *UserDB) LaborCosts(userId int, start, end *string) ([]testtask.LaborCosts, error) {
 	var lc []testtask.LaborCosts
 
@@ -165,7 +166,7 @@ func (r *UserDB) LaborCosts(userId int, start, end *string) ([]testtask.LaborCos
 	}
 
 	query := fmt.Sprintf(`
-		SELECT surname, name, patronymic, title,  CASE
+		SELECT surname, name, patronymic,count_pause, title,  CASE
 		           WHEN EXTRACT(DAY FROM justify_hours(duration)) > 0 THEN 
 		               CONCAT(EXTRACT(DAY FROM justify_hours(duration)) * 24 + EXTRACT(HOUR FROM justify_hours(duration)), 'h ', 
 		                      EXTRACT(MINUTE FROM justify_hours(duration)), 'm')

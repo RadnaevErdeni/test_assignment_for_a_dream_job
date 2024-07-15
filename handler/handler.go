@@ -36,6 +36,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			tasks.PUT("/:taskId", h.updateTask)
 			tasks.PUT("/:taskId/start", h.startTask)
 			tasks.PUT("/:taskId/end", h.endTask)
+			tasks.PUT("/:taskId/pause", h.pauseTask)
+			tasks.PUT("/:taskId/resume", h.resumeTask)
 			tasks.DELETE("/:taskId", h.deleteTask)
 		}
 	}

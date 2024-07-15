@@ -40,3 +40,10 @@ func (s *TaskService) Start(userId, taskId int) error {
 func (s *TaskService) End(userId, taskId int) error {
 	return s.repo.End(userId, taskId)
 }
+func (s *TaskService) Pause(userId, taskId int) error {
+	return s.repo.Pause(userId, taskId)
+}
+
+func (s *TaskService) Resume(userId, taskId int) error {
+	return s.repo.Resume(userId, taskId)
+}
