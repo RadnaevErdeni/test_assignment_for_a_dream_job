@@ -25,27 +25,24 @@ type Times struct {
 }
 
 type LaborCosts struct {
-	Surname     string  `json:"surname"`
-	Name        string  `json:"name"`
-	Patronymic  string  `json:"patronymic" `
-	Title       string  `json:"title"`
-	Duration    *string `json:"duration,omitempty"`
-	Count_pause *int    `json:"count_pause,omitempty"`
+	Surname    string  `json:"surname"`
+	Name       string  `json:"name"`
+	Patronymic string  `json:"patronymic" `
+	Title      string  `json:"title"`
+	Duration   *string `json:"duration,omitempty"`
 }
 type Tasks struct {
-	Id             int     `json:"id" db:"id"`
-	Title          string  `json:"title,omitempty" db:"title" binding:"required"`
-	Description    string  `json:"description,omitempty" db:"description"`
-	Start_time     *string `json:"start_time,omitempty" db:"start_time"`
-	End_time       *string `json:"end_time,omitempty" db:"end_time"`
-	Duration       *string `json:"duration,omitempty" db:"duration"`
-	Duration_pause *string `json:"duration_pause,omitempty" db:"duration_pause"`
-	Done           bool    `json:"done,omitempty" db:"done"`
-	Took           bool    `json:"took,omitempty" db:"took"`
-	Date_create    string  `json:"date_create" db:"date_create"`
-	Pause_time     *string `json:"pause_time,omitempty" db:"pause_time"`
-	Resume_time    *string `json:"resume_time,omitempty" db:"resume_time"`
-	Count_pause    int     `json:"count_pause" db:"count_pause"`
+	Id                   int     `json:"id" db:"id"`
+	Title                string  `json:"title,omitempty" db:"title" binding:"required"`
+	Description          string  `json:"description,omitempty" db:"description"`
+	Start_time           *string `json:"start_time,omitempty" db:"start_time"`
+	End_time             *string `json:"end_time,omitempty" db:"end_time"`
+	Duration             *string `json:"duration,omitempty" db:"duration"`
+	Total_pause_duration *string `json:"total_pause_duration,omitempty" db:"total_pause_duration"`
+	Status               *string `json:"status,omitempty" db:"status"`
+	Last_resume_time     *string `json:"last_resume_time,omitempty" db:"last_resume_time"`
+	Date_create          string  `json:"date_create" db:"date_create"`
+	Last_pause_time      *string `json:"last_pause_time,omitempty" db:"last_pause_time"`
 }
 
 type UserTask struct {
@@ -88,14 +85,6 @@ func (i *Passport) ValidatePasNum(usr Passport) (int, int, error) {
 	}
 
 	return ps, pn, nil
-}
-
-func (i UpdateTaskInput) Validate() error {
-	if i.Title == nil && i.Description == nil && i.Start_time == nil && i.End_time == nil && i.Duration == nil && i.Done == nil && i.Took == nil {
-		return errors.New("update structure has no values")
-	}
-
-	return nil
 }
 
 type UpdateUserInput struct {

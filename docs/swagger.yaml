@@ -1,4 +1,9 @@
 definitions:
+  handler.responsestat:
+    properties:
+      message:
+        type: string
+    type: object
   testtask.DBUsers:
     properties:
       address:
@@ -21,45 +26,37 @@ definitions:
     - passport_number
     - passport_serie
     type: object
+  testtask.Passport:
+    properties:
+      passport_number:
+        type: string
+    type: object
   testtask.Tasks:
     properties:
       date_create:
         type: string
       description:
         type: string
-      done:
-        type: boolean
       duration:
         type: string
       end_time:
         type: string
       id:
         type: integer
+      last_pause_time:
+        type: string
+      last_resume_time:
+        type: string
       start_time:
+        type: string
+      status:
         type: string
       title:
         type: string
-      took:
-        type: boolean
+      total_pause_duration:
+        type: string
     required:
     - title
-    type: object
-  testtask.UpdateTaskInput:
-    properties:
-      bool:
-        type: boolean
-      description:
-        type: string
-      duration:
-        type: string
-      end_time:
-        type: string
-      start_time:
-        type: string
-      title:
-        type: string
-      took:
-        type: boolean
     type: object
   testtask.UpdateUserInput:
     properties:
@@ -75,26 +72,6 @@ definitions:
         type: string
       surname:
         type: string
-    type: object
-  testtask.Users:
-    properties:
-      address:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      passport_number:
-        type: string
-      patronymic:
-        type: string
-      surname:
-        type: string
-    required:
-    - address
-    - name
-    - passport_number
-    - surname
     type: object
 info:
   contact: {}
@@ -165,40 +142,6 @@ paths:
               type: string
             type: object
       summary: Get All Users
-    post:
-      consumes:
-      - application/json
-      description: Create a new user
-      operationId: create-user
-      parameters:
-      - description: User info
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/testtask.Users'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Ok
-          schema:
-            additionalProperties:
-              type: integer
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Create User
   /user/{userId}:
     delete:
       description: Delete user by ID
@@ -479,50 +422,6 @@ paths:
               type: string
             type: object
       summary: Get Task by ID
-    put:
-      consumes:
-      - application/json
-      description: Update task by ID
-      operationId: update-task
-      parameters:
-      - description: User ID
-        in: path
-        name: userId
-        required: true
-        type: integer
-      - description: Task ID
-        in: path
-        name: taskId
-        required: true
-        type: integer
-      - description: Task info
-        in: body
-        name: task
-        required: true
-        schema:
-          $ref: '#/definitions/testtask.UpdateTaskInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Ok
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Update Task
   /user/{userId}/tasks/{taskId}/end:
     put:
       description: End task by ID
@@ -560,6 +459,76 @@ paths:
               type: string
             type: object
       summary: End Task
+  /user/{userId}/tasks/{taskId}/pause:
+    put:
+      description: Pause a task by ID for a specific user
+      operationId: pause-task
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - description: Task ID
+        in: path
+        name: taskId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ok
+          schema:
+            $ref: '#/definitions/handler.responsestat'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Pause Task
+  /user/{userId}/tasks/{taskId}/resume:
+    put:
+      description: Resume a paused task by ID for a specific user
+      operationId: resume-task
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      - description: Task ID
+        in: path
+        name: taskId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ok
+          schema:
+            $ref: '#/definitions/handler.responsestat'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Resume Task
   /user/{userId}/tasks/{taskId}/start:
     put:
       description: Start task by ID
@@ -597,4 +566,39 @@ paths:
               type: string
             type: object
       summary: Start Task
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with passport validation
+      operationId: create-user
+      parameters:
+      - description: Passport info
+        in: body
+        name: passport
+        required: true
+        schema:
+          $ref: '#/definitions/testtask.Passport'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ok
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create User
 swagger: "2.0"

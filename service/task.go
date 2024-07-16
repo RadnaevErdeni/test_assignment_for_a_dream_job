@@ -24,12 +24,6 @@ func (s *TaskService) GetById(userId, taskId int) (testtask.Tasks, error) {
 func (s *TaskService) Delete(userId, taskId int) error {
 	return s.repo.Delete(userId, taskId)
 }
-func (s *TaskService) UpdateTask(userId, taskId int, input testtask.UpdateTaskInput) error {
-	if err := input.Validate(); err != nil {
-		return err
-	}
-	return s.repo.UpdateTask(userId, taskId, input)
-}
 
 func (s *TaskService) GetAll(userId int) ([]testtask.Tasks, error) {
 	return s.repo.GetAll(userId)

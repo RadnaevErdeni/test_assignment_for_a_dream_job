@@ -19,7 +19,6 @@ type Task interface {
 	GetAll(userId int) ([]testtask.Tasks, error)
 	GetById(userId, taskId int) (testtask.Tasks, error)
 	Delete(userId, taskId int) error
-	UpdateTask(userId, taskId int, input testtask.UpdateTaskInput) error
 	Start(userId, taskId int) error
 	End(userId, taskId int) error
 	Pause(userId, taskId int) error

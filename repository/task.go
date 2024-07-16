@@ -2,7 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"strings"
 	"tt/testtask"
 
 	"github.com/jmoiron/sqlx"
@@ -23,7 +22,7 @@ func (r *TaskDB) Create(userId int, task testtask.Tasks) (int, error) {
 	}
 
 	var id int
-	createTaskQuery := fmt.Sprintf("INSERT INTO %s (title, description,done,took,date_create) values ($1, $2, false,false,Now()) RETURNING id", taskTable)
+	createTaskQuery := fmt.Sprintf("INSERT INTO %s (title, description,date_create,status) values ($1, $2,Now(),'not_started') RETURNING id", taskTable)
 	row := tx.QueryRow(createTaskQuery, task.Title, task.Description)
 	err = row.Scan(&id)
 	if err != nil {
@@ -43,7 +42,7 @@ func (r *TaskDB) Create(userId int, task testtask.Tasks) (int, error) {
 
 func (r *TaskDB) GetAll(userId int) ([]testtask.Tasks, error) {
 	var tasks []testtask.Tasks
-	query := fmt.Sprintf("SELECT ts.id,ts.title,ts.description,ts.start_time,ts.end_time,ts.duration,ts.done,ts.took,ts.date_create FROM %s ts INNER JOIN %s ut ON ts.id = ut.task_id WHERE ut.user_id = $1", taskTable, usersTaskTable)
+	query := fmt.Sprintf("SELECT ts.id,ts.title,ts.description,ts.start_time,ts.end_time,ts.duration,ts.total_pause_duration,ts.status,ts.last_resume_time,ts.last_pause_time, ts.date_create FROM %s ts INNER JOIN %s ut ON ts.id = ut.task_id WHERE ut.user_id = $1", taskTable, usersTaskTable)
 	if err := r.db.Select(&tasks, query, userId); err != nil {
 		return nil, err
 	}
@@ -51,7 +50,7 @@ func (r *TaskDB) GetAll(userId int) ([]testtask.Tasks, error) {
 }
 func (r *TaskDB) GetById(userId, taskId int) (testtask.Tasks, error) {
 	var user testtask.Tasks
-	query := fmt.Sprintf(`SELECT ts.id,ts.title,ts.description,ts.start_time,ts.end_time,ts.duration,ts.done,ts.took,ts.date_create FROM %s ts INNER JOIN user_task us ON us.task_id = ts.id WHERE ts.id = $1 AND us.user_id = $2`,
+	query := fmt.Sprintf(`SELECT ts.id,ts.title,ts.description,ts.start_time,ts.end_time,ts.duration,ts.total_pause_duration,ts.status,ts.last_resume_time,ts.last_pause_time, ts.date_create FROM %s ts INNER JOIN user_task us ON us.task_id = ts.id WHERE ts.id = $1 AND us.user_id = $2`,
 		taskTable)
 	err := r.db.Get(&user, query, taskId, userId)
 	return user, err
@@ -77,58 +76,8 @@ func (r *TaskDB) Delete(userId, taskId int) error {
 	return tx.Commit()
 }
 
-func (r *TaskDB) UpdateTask(userId, taskId int, input testtask.UpdateTaskInput) error {
-	setValues := make([]string, 0)
-	args := make([]interface{}, 0)
-	argId := 1
-	if input.Title != nil {
-		setValues = append(setValues, fmt.Sprintf("title=$%d", argId))
-		args = append(args, *input.Title)
-		argId++
-	}
-
-	if input.Description != nil {
-		setValues = append(setValues, fmt.Sprintf("description=$%d", argId))
-		args = append(args, *input.Description)
-		argId++
-	}
-	if input.Start_time != nil {
-		setValues = append(setValues, fmt.Sprintf("start_time=$%d", argId))
-		args = append(args, *input.Start_time)
-		argId++
-	}
-	if input.End_time != nil {
-		setValues = append(setValues, fmt.Sprintf("end_time=$%d", argId))
-		args = append(args, *input.End_time)
-		argId++
-	}
-	if input.Done != nil {
-		setValues = append(setValues, fmt.Sprintf("done=$%d", argId))
-		args = append(args, *input.Done)
-		argId++
-	}
-	if input.Took != nil {
-		setValues = append(setValues, fmt.Sprintf("took=$%d", argId))
-		args = append(args, *input.Took)
-		argId++
-	}
-	if input.Duration != nil {
-		setValues = append(setValues, fmt.Sprintf("duration=$%d", argId))
-		args = append(args, *input.Duration)
-		argId++
-	}
-	setQuery := strings.Join(setValues, ", ")
-
-	query := fmt.Sprintf("UPDATE %s ts SET %s WHERE ts.id = $%d",
-		taskTable, setQuery, argId)
-	args = append(args, taskId)
-
-	_, err := r.db.Exec(query, args...)
-	return err
-}
-
 func (r *TaskDB) Start(userId, taskId int) error {
-	startQuery := fmt.Sprintf("UPDATE %s ts SET start_time = Now(),resume_time = Now(),took = true FROM %s tsk,%s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, taskTable, usersTaskTable)
+	startQuery := fmt.Sprintf("UPDATE %s ts SET start_time = NOW(), last_resume_time = NOW(),status = 'in_progress' FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2 AND status = 'not_started'", taskTable, usersTaskTable)
 	_, err := r.db.Exec(startQuery, taskId, userId)
 	if err != nil {
 		return err
@@ -136,22 +85,23 @@ func (r *TaskDB) Start(userId, taskId int) error {
 
 	return nil
 }
+
 func (r *TaskDB) End(userId, taskId int) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
 	}
-	endQuery := fmt.Sprintf("UPDATE %s ts SET end_time = Now(),done = true,pause_time = CASE WHEN count_pause > 0 THEN Now() END, resume_time = CASE WHEN count_pause = 0 THEN NULL::timestamp ELSE Now() END FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, usersTaskTable)
+	defer tx.Rollback()
+
+	endQuery := fmt.Sprintf(`UPDATE %s ts SET end_time = NOW(), status = 'completed' FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2 AND (status = 'in_progress' OR status = 'paused')`, taskTable, usersTaskTable)
 	_, err = tx.Exec(endQuery, taskId, userId)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	EndQuery := fmt.Sprintf("UPDATE %s ts SET duration = CASE WHEN count_pause = 0 THEN end_time - start_time ELSE duration + (pause_time - resume_time) END FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, usersTaskTable)
-	_, err = tx.Exec(EndQuery, taskId, userId)
+	updateDurationQuery := fmt.Sprintf(`UPDATE %s ts SET duration = (end_time - start_time) - total_pause_duration FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2 AND status = 'completed'`, taskTable, usersTaskTable)
+	_, err = tx.Exec(updateDurationQuery, taskId, userId)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 
@@ -163,17 +113,16 @@ func (r *TaskDB) Pause(userId, taskId int) error {
 	if err != nil {
 		return err
 	}
-	PauseQuery := fmt.Sprintf("UPDATE %s ts SET pause_time = Now(),count_pause = count_pause+1 FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, usersTaskTable)
-	_, err = tx.Exec(PauseQuery, taskId, userId)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
+	defer tx.Rollback()
 
-	pauseQuery := fmt.Sprintf("UPDATE %s ts SET duration_pause = pause_time - resume_time, resume_time = null FROM  %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, usersTaskTable)
+	pauseQuery := fmt.Sprintf(`UPDATE %s ts SET last_pause_time = NOW(), status = 'paused' FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2 AND status = 'in_progress'`, taskTable, usersTaskTable)
 	_, err = tx.Exec(pauseQuery, taskId, userId)
 	if err != nil {
-		tx.Rollback()
+		return err
+	}
+	updateDurationQuery := fmt.Sprintf(`UPDATE %s ts SET total_pause_duration = total_pause_duration + (NOW() - last_resume_time) FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2 AND status = 'paused'`, taskTable, usersTaskTable)
+	_, err = tx.Exec(updateDurationQuery, taskId, userId)
+	if err != nil {
 		return err
 	}
 
@@ -182,24 +131,7 @@ func (r *TaskDB) Pause(userId, taskId int) error {
 }
 
 func (r *TaskDB) Resume(userId, taskId int) error {
-	tx, err := r.db.Begin()
-	if err != nil {
-		return err
-	}
-	ResumeQuery := fmt.Sprintf("UPDATE %s ts SET resume_time = Now(), duration = '00:00' FROM %s tsk, %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, taskTable, usersTaskTable)
-	_, err = tx.Exec(ResumeQuery, taskId, userId)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	resumeQuery := fmt.Sprintf("UPDATE %s ts SET pause_time = null,duration = ts.duration + ts.duration_pause FROM %s tsk, %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2", taskTable, taskTable, usersTaskTable)
-	_, err = tx.Exec(resumeQuery, taskId, userId)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
-
+	query := fmt.Sprintf(`UPDATE %s ts SET last_resume_time = NOW(),status = 'in_progress' FROM %s ut WHERE ts.id = $1 AND ut.task_id = ts.id AND ut.user_id = $2 AND status = 'paused'`, taskTable, usersTaskTable)
+	_, err := r.db.Exec(query, taskId, userId)
+	return err
 }

@@ -166,7 +166,7 @@ func (r *UserDB) LaborCosts(userId int, start, end *string) ([]testtask.LaborCos
 	}
 
 	query := fmt.Sprintf(`
-		SELECT surname, name, patronymic,count_pause, title,  CASE
+		SELECT surname, name, patronymic,title,  CASE
 		           WHEN EXTRACT(DAY FROM justify_hours(duration)) > 0 THEN 
 		               CONCAT(EXTRACT(DAY FROM justify_hours(duration)) * 24 + EXTRACT(HOUR FROM justify_hours(duration)), 'h ', 
 		                      EXTRACT(MINUTE FROM justify_hours(duration)), 'm')
